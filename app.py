@@ -70,13 +70,13 @@ def add_order():
 
     return {"message": "Order added!", "order_id": order_id, "order": data}
 
-@app.get("/check_order")
+@app.post("/check_order")
 def check_order():
-    order_id = request.args.get("order_id")
+    data = request.get_json()
+    order_id = data.get("order_id")
     print("===============================================")
     print(f"Order_ID : {order_id}")
     print("===============================================")
-    
 
     if not order_id:
         return {"message": "order_id is required"}, 400

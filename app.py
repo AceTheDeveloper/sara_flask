@@ -4,6 +4,10 @@ import gspread
 from google.oauth2.service_account import Credentials
 import os
 import json
+from dotenv import load_dotenv
+
+
+load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
@@ -24,7 +28,7 @@ def home():
 
 @app.get('/get_menu')
 def get_menu():
-    sheet = get_spreadsheet().worksheet("Menu")
+    sheet = get_spreadsheet().worksheet("Menu List")
     return {"menu": sheet.get_all_records()}
 
 @app.post('/add_order')
@@ -42,6 +46,12 @@ def add_order():
     sheet.append_row([order_id, name, email, service_type, address, total])
 
     return {"message": "Order added!", "order": data}
+
+@app.get('/get_sheets')
+def get_sheets():
+    spreadsheet = get_spreadsheet()
+    sheets = [sheet.title for sheet in spreadsheet.worksheets()]
+    return {"sheets": sheets}
 
 if __name__ == "__main__":
     app.run(debug=True)

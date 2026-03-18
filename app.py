@@ -73,6 +73,10 @@ def add_order():
 @app.get("/check_order")
 def check_order():
     order_id = request.args.get("order_id")
+    print("===============================================")
+    print(f"Order_ID : {order_id}")
+    print("===============================================")
+    
 
     if not order_id:
         return {"message": "order_id is required"}, 400
@@ -90,5 +94,5 @@ def check_order():
 
 
 if __name__ == "__main__":
-    # app.run(debug=True)
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    app.run(debug=True)
+    # app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

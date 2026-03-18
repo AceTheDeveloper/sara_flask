@@ -1,0 +1,8 @@
+REQUIREMENTS IN PRODUCTION:
+
+gspread
+google-auth
+flask-cors
+Flask
+gunicorn
+python-dotenv

@@ -1,11 +1,11 @@
 from flask import Flask, request
 from flask_cors import CORS
-import gspread
 from google.oauth2.service_account import Credentials
-import os
-import json
 from dotenv import load_dotenv
-
+import gspread
+import random
+import json
+import os
 
 load_dotenv()
 
@@ -14,63 +14,80 @@ CORS(app)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
+
+# ─── SPREADSHEET ─────────────────────────────────────────────────────────────
+
 def get_spreadsheet():
-    creds_json = os.environ.get("GOOGLE_CREDENTIALS")  # reads from env
-    creds_dict = json.loads(creds_json)
-    
+    creds_dict = json.loads(os.environ.get("GOOGLE_CREDENTIALS"))
     creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     client = gspread.authorize(creds)
     return client.open_by_key(os.environ.get("SPREADSHEET_ID"))
 
 
-def add_order_items(arr, order_id):
-    sheet = get_spreadsheet().worksheet("Order Items")
-    for i in arr:
-        total = int(i['quantity']) * float(i['price'])
-        sheet.append_row([order_id, i['name'], i['quantity'], i['price'], total]) 
-        
-def get_total(arr):
-    total = 0
-    
-    for i in arr:
-        total += (float(i['price']) * int(i['quantity']))
-    return total
+# ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-@app.route("/")
+def generate_order_id():
+    return f"ORD-{random.randint(0, 999999):06d}"
+
+def get_total(order_items):
+    return sum(float(i['price']) * int(i['quantity']) for i in order_items)
+
+def add_order_items(order_items, order_id):
+    sheet = get_spreadsheet().worksheet("Order Items")
+    for i in order_items:
+        total = int(i['quantity']) * float(i['price'])
+        sheet.append_row([order_id, i['name'], i['quantity'], i['price'], total])
+
+
+# ─── ROUTES ──────────────────────────────────────────────────────────────────
+
+@app.get("/")
 def home():
     return {"message": "hello"}
 
-@app.get('/get_menu')
+@app.get("/get_menu")
 def get_menu():
     sheet = get_spreadsheet().worksheet("Menu List")
     return {"menu": sheet.get_all_records()}
 
-@app.post('/add_order')
+@app.post("/add_order")
 def add_order():
-    data = request.get_json()
-
-    order_id     = data.get("order_id")
-    name         = data.get("name")
-    email        = data.get("email")
-    service_type = data.get("service_type")
-    address      = data.get("address")
-    orders       = data.get('order_items')
-    total        = get_total(orders)
+    data         = request.get_json()
+    order_items  = data.get("order_items")
+    order_id     = generate_order_id()
 
     sheet = get_spreadsheet().worksheet("Orders")
-    sheet.append_row([order_id, name, email, service_type, address, total])
-    
-    add_order_items(orders, order_id)
+    sheet.append_row([
+        order_id,
+        data.get("name"),
+        data.get("email"),
+        data.get("service_type"),
+        data.get("address"),
+        get_total(order_items)
+    ])
 
-    return {"message": "Order added!", "order": data}
+    add_order_items(order_items, order_id)
 
+    return {"message": "Order added!", "order_id": order_id, "order": data}
 
+@app.get("/check_order")
+def check_order():
+    order_id = request.args.get("order_id")
 
-@app.get('/get_sheets')
-def get_sheets():
-    spreadsheet = get_spreadsheet()
-    sheets = [sheet.title for sheet in spreadsheet.worksheets()]
-    return {"sheets": sheets}
+    if not order_id:
+        return {"message": "order_id is required"}, 400
+
+    orders_sheet = get_spreadsheet().worksheet("Orders")
+    order = next((row for row in orders_sheet.get_all_records() if row["order_id"] == order_id), None)
+
+    if not order:
+        return {"message": "Order not found"}, 404
+
+    items_sheet = get_spreadsheet().worksheet("Order Items")
+    items = [row for row in items_sheet.get_all_records() if row["order_id"] == order_id]
+
+    return {"order": order, "items": items}
+
 
 if __name__ == "__main__":
     # app.run(debug=True)

@@ -73,7 +73,7 @@ def add_order():
 @app.post("/check_order")
 def check_order():
     data = request.get_json()
-    order_id = data.get("order_id")
+    order_id = f"ORD-{data.get("order_id")}"
     print("===============================================")
     print(f"Order_ID : {order_id}")
     print("===============================================")

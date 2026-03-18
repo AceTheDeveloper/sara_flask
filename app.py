@@ -94,7 +94,7 @@ def check_order():
 
 
 if __name__ == "__main__":
-    if os.environ.get("NODE_TYPE") == 'DEVELOPMENT':
-        app.run(debug=True)
-    else:
-        app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    # if os.environ.get("NODE_TYPE") == 'DEVELOPMENT':
+    #     app.run(debug=True)
+    # else:
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

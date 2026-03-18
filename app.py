@@ -22,6 +22,20 @@ def get_spreadsheet():
     client = gspread.authorize(creds)
     return client.open_by_key(os.environ.get("SPREADSHEET_ID"))
 
+
+def add_order_items(arr, order_id):
+    sheet = get_spreadsheet().worksheet("Order Items")
+    for i in arr:
+        total = int(i['quantity']) * float(i['price'])
+        sheet.append_row([order_id, i['name'], i['quantity'], i['price'], total]) 
+        
+def get_total(arr):
+    total = 0
+    
+    for i in arr:
+        total += (float(i['price']) * int(i['quantity']))
+    return total
+
 @app.route("/")
 def home():
     return {"message": "hello"}
@@ -40,12 +54,17 @@ def add_order():
     email        = data.get("email")
     service_type = data.get("service_type")
     address      = data.get("address")
-    total        = data.get("total")
+    orders       = data.get('order_items')
+    total        = get_total(orders)
 
     sheet = get_spreadsheet().worksheet("Orders")
     sheet.append_row([order_id, name, email, service_type, address, total])
+    
+    add_order_items(orders, order_id)
 
     return {"message": "Order added!", "order": data}
+
+
 
 @app.get('/get_sheets')
 def get_sheets():
@@ -54,4 +73,5 @@ def get_sheets():
     return {"sheets": sheets}
 
 if __name__ == "__main__":
+    # app.run(debug=True)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))

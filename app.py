@@ -2,6 +2,14 @@ from flask import Flask
 from flask_cors import CORS
 import os
 
+
+menu = [
+    {"name" : "Cheese Burger", "price" : "$24.5"},
+    {"name" : "Shawarma Fries", "price" : "$28.5"},
+    {"name" : "Tacos", "price" : "$23.5"}
+    
+]
+
 app = Flask(__name__)
 CORS(app)  # ← This is the key fix
 
@@ -12,7 +20,7 @@ def home():
 @app.get('/get_menu')
 def get_menu():
     return {
-        "menu": "Menu"
+        "menu": menu
     }
 
 if __name__ == "__main__":

@@ -2,17 +2,21 @@ from flask import Flask, request
 from flask_cors import CORS
 import gspread
 from google.oauth2.service_account import Credentials
+import os
+import json
 
 app = Flask(__name__)
 CORS(app)
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-SPREADSHEET_ID = "13emxywRjUsScWX8O3xBo2y8QOgiRpvxrBj2zqbjkCn4"
 
 def get_spreadsheet():
-    creds = Credentials.from_service_account_file("credentials.json", scopes=SCOPES)
+    creds_json = os.environ.get("GOOGLE_CREDENTIALS")  # reads from env
+    creds_dict = json.loads(creds_json)
+    
+    creds = Credentials.from_service_account_info(creds_dict, scopes=SCOPES)
     client = gspread.authorize(creds)
-    return client.open_by_key(SPREADSHEET_ID)
+    return client.open_by_key(os.environ.get("SPREADSHEET_ID"))
 
 @app.route("/")
 def home():

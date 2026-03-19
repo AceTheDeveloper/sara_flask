@@ -37,7 +37,26 @@ def add_order_items(order_items, order_id):
     for i in order_items:
         total = int(i['quantity']) * float(i['price'])
         sheet.append_row([order_id, i['name'], i['quantity'], i['price'], total])
-
+        
+def update_food_qty(order_items):
+    sheet = get_spreadsheet().worksheet("Menu List")
+    
+    records = sheet.get_all_records()
+    
+    
+    for i in order_items:
+        for index, row in enumerate(records):
+            if row['name'] == i['name']:
+                row_number = index + 2
+                current_qty = int(row['quantity'])
+                new_qty = current_qty - int(i['quantity'])
+                
+                headers = sheet.row_values(1)
+                col_number = headers.index('quantity') + 1
+                
+                sheet.update_cell(row_number, col_number, new_qty)
+                
+    return True
 
 # ─── ROUTES ──────────────────────────────────────────────────────────────────
 
@@ -66,10 +85,12 @@ def add_order():
         get_total(order_items)
     ])
 
-    add_order_items(order_items, order_id)
-
-    return {"message": "Order added!", "order_id": order_id, "order": data}
-
+    if(add_order_items(order_items, order_id)):
+        update_food_qty(order_items)
+        return {"message": "Order added!", "order_id": order_id, "order": data}
+    else:
+        return {"error" : "Error on adding foods"}
+    
 @app.post("/check_order")
 def check_order():
     data = request.get_json()

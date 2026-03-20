@@ -74,6 +74,7 @@ def add_order():
     data         = request.get_json()
     order_items  = data.get("order_items")
     order_id     = generate_order_id()
+    status       = 'pending'
 
     sheet = get_spreadsheet().worksheet("Orders")
     sheet.append_row([
@@ -82,7 +83,8 @@ def add_order():
         data.get("email"),
         data.get("service_type"),
         data.get("address"),
-        get_total(order_items)
+        get_total(order_items),
+        status
     ])
 
     if(add_order_items(order_items, order_id)):

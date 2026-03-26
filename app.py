@@ -88,7 +88,7 @@ def add_order():
     ])
 
     if(add_order_items(order_items, order_id)):
-        update_food_qty(order_items)
+        # update_food_qty(order_items)
         return {"message": "Order added!", "order_id": order_id, "order": data}
     else:
         return {"error" : "Error on adding foods"}

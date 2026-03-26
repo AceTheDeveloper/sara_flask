@@ -30,6 +30,8 @@ def generate_order_id():
     return f"ORD-{random.randint(0, 999999):06d}"
 
 def get_total(order_items):
+    if not order_items:
+        return {"error": "order_items is required"}, 400
     return sum(float(i['price']) * int(i['quantity']) for i in order_items)
 
 def add_order_items(order_items, order_id):
@@ -38,11 +40,12 @@ def add_order_items(order_items, order_id):
         total = int(i['quantity']) * float(i['price'])
         sheet.append_row([order_id, i['name'], i['quantity'], i['price'], total])
         
+    return True
+        
 def update_food_qty(order_items):
     sheet = get_spreadsheet().worksheet("Menu List")
     
     records = sheet.get_all_records()
-    
     
     for i in order_items:
         for index, row in enumerate(records):
@@ -89,14 +92,14 @@ def add_order():
 
     if(add_order_items(order_items, order_id)):
         # update_food_qty(order_items)
-        return {"message": "Order added!", "order_id": order_id, "order": data}
+        return {"message": "Order added!", "isSuccess" : True, "order_id": order_id, "order": data}
     else:
         return {"error" : "Error on adding foods"}
     
 @app.post("/check_order")
 def check_order():
     data = request.get_json()
-    order_id = f"ORD-{data.get("order_id")}"
+    order_id = f"ORD-{data.get('order_id')}"
     print("===============================================")
     print(f"Order_ID : {order_id}")
     print("===============================================")
